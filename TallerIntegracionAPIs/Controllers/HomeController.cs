@@ -1,24 +1,42 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TallerIntegracionAPIs.Interfaces;
-using TallerIntegracionAPIs.Models;
 using TallerIntegracionAPIs.Repositories;
 
 namespace TallerIntegracionAPIs.Controllers
 {
     public class HomeController : Controller
     {
-        private IChatbotService _chatbotService;
+        private readonly GeminiRepository _gemini;
+        private readonly OpenAIRepository _openai;
 
-        public HomeController(IChatbotService chatbotService)
+        public HomeController(GeminiRepository gemini, OpenAIRepository openai)
         {
-            _chatbotService = chatbotService;
+            _gemini = gemini;
+            _openai = openai;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public IActionResult Index()
         {
-            var response = await _chatbotService.ObtenerRespuestaChatbot("Resume en 5 palabras El QUijote de la Mancha");
-            ViewBag.respuesta = response;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Index(string prompt, string proveedor)
+        {
+            if (string.IsNullOrWhiteSpace(prompt) || string.IsNullOrWhiteSpace(proveedor))
+            {
+                ViewBag.Respuesta = "Por favor completa todos los campos.";
+                return View();
+            }
+
+            string respuesta = proveedor switch
+            {
+                "Gemini" => await _gemini.ObtenerRespuestaChatbot(prompt),
+                "OpenAI" => await _openai.ObtenerRespuestaChatbot(prompt),
+                _ => "Proveedor no válido."
+            };
+
+            ViewBag.Respuesta = respuesta;
             return View();
         }
     }

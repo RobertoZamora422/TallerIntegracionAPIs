@@ -6,9 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddScoped<IChatbotService, GeminiRepository>();
-builder.Services.AddScoped<IChatbotService, OpenAIRepository>();
-
+builder.Services.AddScoped<GeminiRepository>();
+builder.Services.AddScoped<OpenAIRepository>();
 
 var app = builder.Build();
 

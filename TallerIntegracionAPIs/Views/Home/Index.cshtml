@@ -1,9 +1,33 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "ZamoraBOT";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-    <p>@ViewBag.respuesta</p>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">🤖 ZamoraBOT</h1>
+
+    <form method="post" class="card p-4 shadow">
+        <div class="mb-3">
+            <label for="proveedor" class="form-label">Selecciona el proveedor</label>
+            <select class="form-select" id="proveedor" name="proveedor" required>
+                <option value="">-- Selecciona --</option>
+                <option value="Gemini">Gemini</option>
+                <option value="OpenAI">ChatGPT (OpenAI)</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="prompt" class="form-label">Escribe tu pregunta</label>
+            <textarea class="form-control" id="prompt" name="prompt" rows="3" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Obtener respuesta</button>
+    </form>
+
+    @if (ViewBag.Respuesta != null)
+    {
+        <div class="alert alert-info mt-4">
+            <h5>Respuesta de la IA:</h5>
+            <pre>@ViewBag.Respuesta</pre>
+        </div>
+    }
 </div>
