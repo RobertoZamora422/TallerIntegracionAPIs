@@ -17,7 +17,7 @@ namespace TallerIntegracionAPIs.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var response = await _chatbotService.ObtenerRespuestaChatbot("Resume en 10 palabras El QUijote de la Mancha");
+            var response = await _chatbotService.ObtenerRespuestaChatbot("Resume en 5 palabras El QUijote de la Mancha");
             ViewBag.respuesta = response;
             return View();
         }

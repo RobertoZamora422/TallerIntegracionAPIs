@@ -1,7 +1,14 @@
+using TallerIntegracionAPIs.Interfaces;
+using TallerIntegracionAPIs.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IChatbotService, GeminiRepository>();
+builder.Services.AddScoped<IChatbotService, OpenAIRepository>();
+
 
 var app = builder.Build();
 
