@@ -1,5 +1,8 @@
+using TallerIntegracionAPIs.Data;
 using TallerIntegracionAPIs.Interfaces;
 using TallerIntegracionAPIs.Repositories;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +11,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<GeminiRepository>();
 builder.Services.AddScoped<OpenAIRepository>();
+
+builder.Services.AddDbContext<ChatbotDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
