@@ -2,6 +2,9 @@
 using Newtonsoft.Json;
 using TallerIntegracionAPIs.Interfaces;
 using Microsoft.Extensions.Configuration;
+using TallerIntegracionAPIs.Data;
+using Microsoft.EntityFrameworkCore;
+using TallerIntegracionAPIs.Models;
 
 namespace TallerIntegracionAPIs.Repositories
 {
@@ -9,11 +12,13 @@ namespace TallerIntegracionAPIs.Repositories
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
+        private readonly ChatbotDbContext _dbContext;
 
-        public OpenAIRepository(IConfiguration configuration)
+        public OpenAIRepository(IConfiguration configuration, ChatbotDbContext dbContext)
         {
             _httpClient = new HttpClient();
             _apiKey = configuration["OpenAI:ApiKey"];
+            _dbContext = dbContext;
         }
 
         public async Task<string> ObtenerRespuestaChatbot(string prompt)
@@ -25,8 +30,8 @@ namespace TallerIntegracionAPIs.Repositories
                 model = "gpt-3.5-turbo",
                 messages = new[]
                 {
-            new { role = "user", content = prompt }
-        }
+                    new { role = "user", content = prompt }
+                }
             };
 
             var json = JsonConvert.SerializeObject(requestBody);
@@ -40,10 +45,28 @@ namespace TallerIntegracionAPIs.Repositories
             return result;
         }
 
-
         public bool GuardarRespuestaBaseDatosLocal(string prompt, string respuesta)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var nuevaRespuesta = new RespuestaAIModel
+                {
+                    Prompt = prompt,
+                    Respuesta = respuesta,
+                    Fecha = DateTime.Now,
+                    Proveedor = "OpenAI",
+                    GuardadoPor = "Zamora"
+                };
+
+                _dbContext.Respuestas.Add(nuevaRespuesta);
+                _dbContext.SaveChanges();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

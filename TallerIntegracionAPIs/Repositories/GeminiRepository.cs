@@ -4,6 +4,9 @@ using TallerIntegracionAPIs.Interfaces;
 using Microsoft.Extensions.Configuration;
 using TallerIntegracionAPIs.Interfaces;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using TallerIntegracionAPIs.Data;
+using TallerIntegracionAPIs.Models;
 
 namespace TallerIntegracionAPIs.Repositories
 {
@@ -11,11 +14,13 @@ namespace TallerIntegracionAPIs.Repositories
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
+        private readonly ChatbotDbContext _dbContext;
 
-        public GeminiRepository(IConfiguration configuration)
+        public GeminiRepository(IConfiguration configuration, ChatbotDbContext dbContext)
         {
             _httpClient = new HttpClient();
             _apiKey = configuration["Gemini:ApiKey"];
+            _dbContext = dbContext;
         }
 
         public async Task<string> ObtenerRespuestaChatbot(string prompt)
@@ -47,7 +52,26 @@ namespace TallerIntegracionAPIs.Repositories
 
         public bool GuardarRespuestaBaseDatosLocal(string prompt, string respuesta)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var nuevaRespuesta = new RespuestaAIModel
+                {
+                    Prompt = prompt,
+                    Respuesta = respuesta,
+                    Fecha = DateTime.Now,
+                    Proveedor = "Gemini",
+                    GuardadoPor = "Zamora"
+                };
+
+                _dbContext.Respuestas.Add(nuevaRespuesta);
+                _dbContext.SaveChanges();
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
