@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TallerIntegracionGemini.Interfaces;
-using TallerIntegracionGemini.Models;
-using TallerIntegracionGemini.Repositories;
+using TallerIntegracionAPIs.Interfaces;
+using TallerIntegracionAPIs.Models;
+using TallerIntegracionAPIs.Repositories;
 
-namespace TallerIntegracionGemini.Controllers
+namespace TallerIntegracionAPIs.Controllers
 {
     public class HomeController : Controller
     {

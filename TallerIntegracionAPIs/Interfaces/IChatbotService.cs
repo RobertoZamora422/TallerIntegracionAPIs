@@ -1,4 +1,4 @@
-﻿namespace TallerIntegracionGemini.Interfaces
+﻿namespace TallerIntegracionAPIs.Interfaces
 {
     public interface IChatbotService
     {
