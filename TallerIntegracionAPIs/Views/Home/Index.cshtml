@@ -1,33 +1,63 @@
 ﻿@{
-    ViewData["Title"] = "ZamoraBOT";
+    ViewData["Title"] = "Inicio";
+    var historial = ViewBag.Historial as List<TallerIntegracionAPIs.Models.RespuestaAIModel>;
 }
 
-<div class="container mt-5">
-    <h1 class="text-center mb-4">🤖 ZamoraBOT</h1>
+<h1 class="text-center mb-4">ZamoraBOT</h1>
 
-    <form method="post" class="card p-4 shadow">
-        <div class="mb-3">
-            <label for="proveedor" class="form-label">Selecciona el proveedor</label>
-            <select class="form-select" id="proveedor" name="proveedor" required>
-                <option value="">-- Selecciona --</option>
-                <option value="Gemini">Gemini</option>
-                <option value="OpenAI">ChatGPT (OpenAI)</option>
-            </select>
-        </div>
+<form asp-action="Index" method="post" class="mb-4">
+    <div class="form-group">
+        <label for="prompt">Pregunta:</label>
+        <input type="text" name="prompt" class="form-control" required />
+    </div>
 
-        <div class="mb-3">
-            <label for="prompt" class="form-label">Escribe tu pregunta</label>
-            <textarea class="form-control" id="prompt" name="prompt" rows="3" required></textarea>
-        </div>
+    <div class="form-group mt-2">
+        <label for="proveedor">Proveedor:</label>
+        <select name="proveedor" class="form-control" required>
+            <option value="">-- Selecciona --</option>
+            <option value="Gemini">Gemini</option>
+            <option value="OpenAI">OpenAI</option>
+        </select>
+    </div>
 
-        <button type="submit" class="btn btn-primary">Obtener respuesta</button>
-    </form>
+    <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+</form>
 
-    @if (ViewBag.Respuesta != null)
-    {
-        <div class="alert alert-info mt-4">
-            <h5>Respuesta de la IA:</h5>
-            <pre>@ViewBag.Respuesta</pre>
-        </div>
-    }
-</div>
+@if (ViewBag.Respuesta != null)
+{
+    <div class="alert alert-success">
+        <strong>Respuesta:</strong> @ViewBag.Respuesta
+    </div>
+}
+
+<h3>Historial reciente</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Prompt</th>
+            <th>Respuesta</th>
+            <th>Proveedor</th>
+            <th>Guardado por</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (historial != null && historial.Any())
+        {
+            foreach (var item in historial)
+            {
+                <tr>
+                    <td>@item.Fecha.ToString("g")</td>
+                    <td>@item.Prompt</td>
+                    <td>@item.Respuesta</td>
+                    <td>@item.Proveedor</td>
+                    <td>@item.GuardadoPor</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="5">No hay respuestas registradas.</td></tr>
+        }
+    </tbody>
+</table>
