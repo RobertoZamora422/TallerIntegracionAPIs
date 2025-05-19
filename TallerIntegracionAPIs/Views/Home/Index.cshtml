@@ -1,63 +1,116 @@
 ﻿@{
     ViewData["Title"] = "Inicio";
     var historial = ViewBag.Historial as List<TallerIntegracionAPIs.Models.RespuestaAIModel>;
+    var miembros = ViewBag.Miembros as List<TallerIntegracionAPIs.Models.MiembroEquipo>;
 }
 
-<h1 class="text-center mb-4">ZamoraBOT</h1>
-
-<form asp-action="Index" method="post" class="mb-4">
-    <div class="form-group">
-        <label for="prompt">Pregunta:</label>
-        <input type="text" name="prompt" class="form-control" required />
+<header class="bg-primary text-white text-center py-4 mb-4">
+    <div class="container">
+        <h1>🤖ZamoraBOT</h1>
+        <p class="lead">Sistema de consulta a modelos de IA</p>
     </div>
+</header>
 
-    <div class="form-group mt-2">
-        <label for="proveedor">Proveedor:</label>
-        <select name="proveedor" class="form-control" required>
-            <option value="">-- Selecciona --</option>
-            <option value="Gemini">Gemini</option>
-            <option value="OpenAI">OpenAI</option>
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-3">Enviar</button>
-</form>
-
-@if (ViewBag.Respuesta != null)
-{
-    <div class="alert alert-success">
-        <strong>Respuesta:</strong> @ViewBag.Respuesta
-    </div>
-}
-
-<h3>Historial reciente</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Prompt</th>
-            <th>Respuesta</th>
-            <th>Proveedor</th>
-            <th>Guardado por</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (historial != null && historial.Any())
+<div class="container">
+    <!-- Tarjetas del equipo - Versión compacta para 3 por fila -->
+    <h2 class="text-center mb-4">Nuestro Equipo</h2>
+    <div class="row">
+        @foreach (var miembro in miembros)
         {
-            foreach (var item in historial)
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm team-card">
+                    <div class="card-img-container">
+                        <img src="@miembro.FotoUrl" class="card-img-top" alt="@miembro.Nombre">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@miembro.Nombre</h5>
+                        <h6 class="card-subtitle mb-2 text-muted small">@miembro.Rol</h6>
+                        <p class="card-text small">
+                            <i class="fas fa-heart text-danger"></i> @miembro.Intereses
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent py-2">
+                        <a href="mailto:@miembro.Email" class="btn btn-outline-primary btn-sm btn-block">
+                            <i class="fas fa-envelope"></i> Contactar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Formulario de consulta -->
+    <h2 class="text-center mt-5 mb-4">Consulta a los modelos de IA</h2>
+    <form asp-action="Index" method="post" class="mb-4">
+        <div class="form-group">
+            <label for="prompt">Pregunta:</label>
+            <input type="text" name="prompt" class="form-control" required />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="proveedor">Proveedor:</label>
+            <select name="proveedor" class="form-control" required>
+                <option value="">-- Selecciona --</option>
+                <option value="Gemini">Gemini</option>
+                <option value="OpenAI">OpenAI</option>
+            </select>
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="guardadoPor">Tu nombre (opcional):</label>
+            <input type="text" name="guardadoPor" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+    </form>
+
+    @if (ViewBag.Respuesta != null)
+    {
+        <div class="alert alert-success">
+            <strong>Respuesta:</strong> @ViewBag.Respuesta
+        </div>
+    }
+
+    <!-- Historial -->
+    <h3 class="mt-5">Historial reciente</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Prompt</th>
+                <th>Respuesta</th>
+                <th>Proveedor</th>
+                <th>Guardado por</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (historial != null && historial.Any())
             {
-                <tr>
-                    <td>@item.Fecha.ToString("g")</td>
-                    <td>@item.Prompt</td>
-                    <td>@item.Respuesta</td>
-                    <td>@item.Proveedor</td>
-                    <td>@item.GuardadoPor</td>
-                </tr>
+                foreach (var item in historial)
+                {
+                    <tr>
+                        <td>@item.Fecha.ToString("g")</td>
+                        <td>@item.Prompt</td>
+                        <td>@item.Respuesta</td>
+                        <td>@item.Proveedor</td>
+                        <td>@item.GuardadoPor</td>
+                    </tr>
+                }
             }
-        }
-        else
-        {
-            <tr><td colspan="5">No hay respuestas registradas.</td></tr>
-        }
-    </tbody>
-</table>
+            else
+            {
+                <tr><td colspan="5">No hay respuestas registradas.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <div class="container">
+        <p>&copy; @DateTime.Now.Year - ZamoraBOT - Todos los derechos reservados</p>
+    </div>
+</footer>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+}

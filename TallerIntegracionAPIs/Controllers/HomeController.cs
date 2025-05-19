@@ -29,7 +29,36 @@ namespace TallerIntegracionAPIs.Controllers
                 .Take(10)
                 .ToListAsync();
 
+            var miembros = new List<MiembroEquipo>
+            {
+                new MiembroEquipo
+                {
+                    Nombre = "Roberto Zamora",
+                    Email = "roberto.zamora@udla.edu.ec",
+                    Intereses = "IA, Desarrollo Web, .NET Core",
+                    FotoUrl = "/img/roberto.png",
+                    Rol = "Desarrollador Principal"
+                },
+                new MiembroEquipo
+                {
+                    Nombre = "Jhonatan Tipan",
+                    Email = "jhonatan.tipan@udla.edu.ec",
+                    Intereses = "Frontend, UX/UI",
+                    FotoUrl = "/img/jhonatan.png",
+                    Rol = "Diseñadora Frontend"
+                },
+                new MiembroEquipo
+                {
+                    Nombre = "Camily Solorzano",
+                    Email = "camily.solorzano@udla.edu.ec",
+                    Intereses = "Frontend, UX/UI",
+                    FotoUrl = "/img/camily.png",
+                    Rol = "Diseñadora Frontend"
+                }
+            };
+
             ViewBag.Historial = historial;
+            ViewBag.Miembros = miembros;
             return View();
         }
 
@@ -55,13 +84,7 @@ namespace TallerIntegracionAPIs.Controllers
             ViewBag.Respuesta = respuesta;
             ViewBag.ProveedorSeleccionado = proveedor;
 
-            var historial = await _context.Respuestas
-                .OrderByDescending(r => r.Fecha)
-                .Take(10)
-                .ToListAsync();
-
-            ViewBag.Historial = historial;
-            return View();
+            return await Index();
         }
 
         private IChatbotService ObtenerServicioPorProveedor(string proveedor)
