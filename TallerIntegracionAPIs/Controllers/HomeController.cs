@@ -1,67 +1,92 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TallerIntegracionAPIs.Data;
+using TallerIntegracionAPIs.Interfaces;
 using TallerIntegracionAPIs.Models;
 using TallerIntegracionAPIs.Repositories;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace TallerIntegracionAPIs.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly ChatbotDbContext _context;
-        private readonly GeminiRepository _gemini;
-        private readonly OpenAIRepository _openai;
 
-        public HomeController(ChatbotDbContext context, GeminiRepository gemini, OpenAIRepository openai)
+        public HomeController(IServiceProvider serviceProvider, ChatbotDbContext context)
         {
+            _serviceProvider = serviceProvider;
             _context = context;
-            _gemini = gemini;
-            _openai = openai;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var historial = _context.Respuestas
+            var historial = await _context.Respuestas
                 .OrderByDescending(r => r.Fecha)
                 .Take(10)
-                .ToList();
+                .ToListAsync();
 
             ViewBag.Historial = historial;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(string prompt, string proveedor)
+        public async Task<IActionResult> Index(string prompt, string proveedor, string guardadoPor)
         {
             if (string.IsNullOrWhiteSpace(prompt) || string.IsNullOrWhiteSpace(proveedor))
             {
-                ViewBag.Respuesta = "Por favor completa todos los campos.";
-                ViewBag.Historial = _context.Respuestas.OrderByDescending(r => r.Fecha).Take(10).ToList();
-                return View();
+                ModelState.AddModelError("", "Debes ingresar una pregunta y seleccionar un proveedor.");
+                return await Index();
             }
 
-            string respuesta = proveedor switch
+            var chatbotService = ObtenerServicioPorProveedor(proveedor);
+            if (chatbotService == null)
             {
-                "Gemini" => await _gemini.ObtenerRespuestaChatbot(prompt),
-                "OpenAI" => await _openai.ObtenerRespuestaChatbot(prompt),
-                _ => "Proveedor no válido."
-            };
+                ModelState.AddModelError("", "Proveedor no válido.");
+                return await Index();
+            }
 
-            var respuestaModel = new RespuestaAIModel
+            string respuesta = await chatbotService.ObtenerRespuestaChatbot(prompt);
+            await GuardarRespuestaBaseDatosLocal(prompt, respuesta, proveedor, guardadoPor);
+
+            ViewBag.Respuesta = respuesta;
+            ViewBag.ProveedorSeleccionado = proveedor;
+
+            var historial = await _context.Respuestas
+                .OrderByDescending(r => r.Fecha)
+                .Take(10)
+                .ToListAsync();
+
+            ViewBag.Historial = historial;
+            return View();
+        }
+
+        private IChatbotService ObtenerServicioPorProveedor(string proveedor)
+        {
+            return proveedor?.ToLower() switch
+            {
+                "openai" => (IChatbotService)_serviceProvider.GetService(typeof(OpenAIRepository)),
+                "gemini" => (IChatbotService)_serviceProvider.GetService(typeof(GeminiRepository)),
+                _ => null
+            };
+        }
+
+        private async Task GuardarRespuestaBaseDatosLocal(string prompt, string respuesta, string proveedor, string guardadoPor)
+        {
+            var registro = new RespuestaAIModel
             {
                 Prompt = prompt,
                 Respuesta = respuesta,
+                Fecha = DateTime.Now,
                 Proveedor = proveedor,
-                GuardadoPor = "Zamora"
+                GuardadoPor = guardadoPor ?? "Anónimo"
             };
 
-            _context.Respuestas.Add(respuestaModel);
+            _context.Respuestas.Add(registro);
             await _context.SaveChangesAsync();
-
-            ViewBag.Respuesta = respuesta;
-            ViewBag.Historial = _context.Respuestas.OrderByDescending(r => r.Fecha).Take(10).ToList();
-
-            return View();
         }
     }
 }

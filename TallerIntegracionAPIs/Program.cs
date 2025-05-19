@@ -8,9 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
-builder.Services.AddScoped<GeminiRepository>();
+builder.Services.AddHttpClient("OpenAI", client => { });
+builder.Services.AddHttpClient("Gemini", client => { });
+
 builder.Services.AddScoped<OpenAIRepository>();
+builder.Services.AddScoped<GeminiRepository>();
+
+builder.Services.AddScoped<IDictionary<string, IChatbotService>>(sp => new Dictionary<string, IChatbotService>
+{
+    ["openai"] = sp.GetRequiredService<OpenAIRepository>(),
+    ["gemini"] = sp.GetRequiredService<GeminiRepository>()
+});
 
 builder.Services.AddDbContext<ChatbotDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

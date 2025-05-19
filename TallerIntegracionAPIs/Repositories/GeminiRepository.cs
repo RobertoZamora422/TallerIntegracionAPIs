@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Newtonsoft.Json;
 using TallerIntegracionAPIs.Interfaces;
 using Microsoft.Extensions.Configuration;
 using TallerIntegracionAPIs.Interfaces;
@@ -7,6 +6,9 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using TallerIntegracionAPIs.Data;
 using TallerIntegracionAPIs.Models;
+using System.Text.Json;
+using System.Net;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace TallerIntegracionAPIs.Repositories
 {
@@ -14,23 +16,24 @@ namespace TallerIntegracionAPIs.Repositories
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
-        private readonly ChatbotDbContext _dbContext;
 
-        public GeminiRepository(IConfiguration configuration, ChatbotDbContext dbContext)
+        public GeminiRepository(HttpClient httpClient, IConfiguration config)
         {
-            _httpClient = new HttpClient();
-            _apiKey = configuration["Gemini:ApiKey"];
-            _dbContext = dbContext;
+            _httpClient = httpClient;
+            _apiKey = config["Gemini:ApiKey"]!;
         }
 
         public async Task<string> ObtenerRespuestaChatbot(string prompt)
         {
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}";
+            if (string.IsNullOrWhiteSpace(prompt))
+                return "El prompt no puede estar vacío.";
 
-            var request = new
+            try
             {
-                contents = new[]
+                var requestData = new
                 {
+                    contents = new[]
+                    {
                     new
                     {
                         parts = new[]
@@ -39,38 +42,29 @@ namespace TallerIntegracionAPIs.Repositories
                         }
                     }
                 }
-            };
-
-            var json = JsonConvert.SerializeObject(request);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(url, content);
-            var result = await response.Content.ReadAsStringAsync();
-
-            return result;
-        }
-
-        public bool GuardarRespuestaBaseDatosLocal(string prompt, string respuesta)
-        {
-            try
-            {
-                var nuevaRespuesta = new RespuestaAIModel
-                {
-                    Prompt = prompt,
-                    Respuesta = respuesta,
-                    Fecha = DateTime.Now,
-                    Proveedor = "Gemini",
-                    GuardadoPor = "Zamora"
                 };
 
-                _dbContext.Respuestas.Add(nuevaRespuesta);
-                _dbContext.SaveChanges();
+                var content = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
 
-                return true;
+                var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}", content);
+
+                if (!response.IsSuccessStatusCode)
+                    return $"Error de Gemini: {response.StatusCode}";
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var result = jsonDoc.RootElement
+                    .GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text")
+                    .GetString();
+
+                return result?.Trim() ?? "La respuesta de Gemini fue vacía.";
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return $"Ocurrió un error al obtener la respuesta de Gemini: {ex.Message}";
             }
         }
     }

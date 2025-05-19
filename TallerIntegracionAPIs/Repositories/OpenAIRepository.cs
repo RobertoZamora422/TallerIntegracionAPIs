@@ -1,71 +1,61 @@
 ﻿using System.Text;
-using Newtonsoft.Json;
 using TallerIntegracionAPIs.Interfaces;
 using Microsoft.Extensions.Configuration;
 using TallerIntegracionAPIs.Data;
 using Microsoft.EntityFrameworkCore;
 using TallerIntegracionAPIs.Models;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Net;
 
 namespace TallerIntegracionAPIs.Repositories
 {
     public class OpenAIRepository : IChatbotService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private readonly ChatbotDbContext _dbContext;
 
-        public OpenAIRepository(IConfiguration configuration, ChatbotDbContext dbContext)
+        public OpenAIRepository(HttpClient httpClient, IConfiguration config)
         {
-            _httpClient = new HttpClient();
-            _apiKey = configuration["OpenAI:ApiKey"];
-            _dbContext = dbContext;
+            _httpClient = httpClient;
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {config["OpenAI:ApiKey"]}");
         }
 
         public async Task<string> ObtenerRespuestaChatbot(string prompt)
         {
-            var url = "https://api.openai.com/v1/chat/completions";
+            if (string.IsNullOrWhiteSpace(prompt))
+                return "El prompt no puede estar vacío.";
 
-            var requestBody = new
-            {
-                model = "gpt-3.5-turbo",
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                }
-            };
-
-            var json = JsonConvert.SerializeObject(requestBody);
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.SendAsync(request);
-            var result = await response.Content.ReadAsStringAsync();
-
-            return result;
-        }
-
-        public bool GuardarRespuestaBaseDatosLocal(string prompt, string respuesta)
-        {
             try
             {
-                var nuevaRespuesta = new RespuestaAIModel
+                var requestData = new
                 {
-                    Prompt = prompt,
-                    Respuesta = respuesta,
-                    Fecha = DateTime.Now,
-                    Proveedor = "OpenAI",
-                    GuardadoPor = "Zamora"
+                    model = "gpt-3.5-turbo",
+                    messages = new[]
+                    {
+                    new { role = "user", content = prompt }
+                }
                 };
 
-                _dbContext.Respuestas.Add(nuevaRespuesta);
-                _dbContext.SaveChanges();
+                var content = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
 
-                return true;
+                var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
+
+                if (!response.IsSuccessStatusCode)
+                    return $"Error de OpenAI: {response.StatusCode}";
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var result = jsonDoc.RootElement
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString();
+
+                return result?.Trim() ?? "La respuesta de OpenAI fue vacía.";
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return $"Ocurrió un error al obtener la respuesta de OpenAI: {ex.Message}";
             }
         }
     }
