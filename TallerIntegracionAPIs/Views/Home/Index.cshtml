@@ -12,7 +12,7 @@
 </header>
 
 <div class="container">
-    <!-- Tarjetas del equipo - Versión compacta para 3 por fila -->
+    <!-- Tarjetas del equipo -->
     <h2 class="text-center mb-4">Nuestro Equipo</h2>
     <div class="row">
         @foreach (var miembro in miembros)
@@ -30,9 +30,9 @@
                         </p>
                     </div>
                     <div class="card-footer bg-transparent py-2">
-                        <a href="mailto:@miembro.Email" class="btn btn-outline-primary btn-sm btn-block">
-                            <i class="fas fa-envelope"></i> Contactar
-                        </a>
+                        <small class="text-muted">
+                            <i class="fas fa-envelope me-1"></i> @miembro.Email
+                        </small>
                     </div>
                 </div>
             </div>
@@ -40,34 +40,45 @@
     </div>
 
     <!-- Formulario de consulta -->
-    <h2 class="text-center mt-5 mb-4">Consulta a los modelos de IA</h2>
-    <form asp-action="Index" method="post" class="mb-4">
-        <div class="form-group">
-            <label for="prompt">Pregunta:</label>
-            <input type="text" name="prompt" class="form-control" required />
-        </div>
+    <div class="form-container mb-4">
+        <h2 class="text-center mb-4">Consulta a los modelos de IA</h2>
+        <form asp-action="Index" method="post">
+            <div id="spinner" class="spinner-container">
+                <div class="spinner"></div>
+            </div>
 
-        <div class="form-group mt-2">
-            <label for="proveedor">Proveedor:</label>
-            <select name="proveedor" class="form-control" required>
-                <option value="">-- Selecciona --</option>
-                <option value="Gemini">Gemini</option>
-                <option value="OpenAI">OpenAI</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="prompt">Pregunta:</label>
+                <input type="text" name="prompt" class="form-control" required />
+            </div>
 
-        <div class="form-group mt-2">
-            <label for="guardadoPor">Tu nombre (opcional):</label>
-            <input type="text" name="guardadoPor" class="form-control" />
-        </div>
+            <div class="form-group mt-2">
+                <label for="proveedor">Proveedor:</label>
+                <select name="proveedor" class="form-control" required>
+                    <option value="">-- Selecciona --</option>
+                    <option value="Gemini">Gemini</option>
+                    <option value="OpenAI">OpenAI</option>
+                </select>
+            </div>
 
-        <button type="submit" class="btn btn-primary mt-3">Enviar</button>
-    </form>
+            <div class="form-group mt-2">
+                <label for="guardadoPor">Tu nombre (opcional):</label>
+                <input type="text" name="guardadoPor" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+        </form>
+    </div>
 
     @if (ViewBag.Respuesta != null)
     {
-        <div class="alert alert-success">
-            <strong>Respuesta:</strong> @ViewBag.Respuesta
+        <div class="alert alert-success mb-4">
+            <div class="d-flex justify-content-between">
+                <strong>Respuesta de @ViewBag.ProveedorSeleccionado:</strong>
+                <span class="badge bg-primary">@ViewBag.ProveedorSeleccionado</span>
+            </div>
+            <hr>
+            <p class="mb-0">@ViewBag.Respuesta</p>
         </div>
     }
 
@@ -111,6 +122,24 @@
     </div>
 </footer>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('form').submit(function(e) {
+                $('#spinner').css('display', 'flex');
+                $(this).addClass('form-disabled');
+
+                setTimeout(function() {
+                    $('html, body').animate({
+                        scrollTop: $(".alert-success").offset().top - 100
+                    }, 500);
+                }, 1000);
+            });
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <text>$('#spinner').hide();</text>
+        }
+        });
+    </script>
 }

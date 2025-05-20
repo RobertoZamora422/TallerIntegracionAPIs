@@ -26,7 +26,7 @@ namespace TallerIntegracionAPIs.Controllers
         {
             var historial = await _context.Respuestas
                 .OrderByDescending(r => r.Fecha)
-                .Take(10)
+                .Take(15)
                 .ToListAsync();
 
             var miembros = new List<MiembroEquipo>
@@ -35,9 +35,9 @@ namespace TallerIntegracionAPIs.Controllers
                 {
                     Nombre = "Roberto Zamora",
                     Email = "roberto.zamora@udla.edu.ec",
-                    Intereses = "IA, Desarrollo Web, .NET Core",
+                    Intereses = "IA, Desarrollo Web",
                     FotoUrl = "/img/roberto.png",
-                    Rol = "Desarrollador Principal"
+                    Rol = "Ing. Software"
                 },
                 new MiembroEquipo
                 {
@@ -45,7 +45,7 @@ namespace TallerIntegracionAPIs.Controllers
                     Email = "jhonatan.tipan@udla.edu.ec",
                     Intereses = "Frontend, UX/UI",
                     FotoUrl = "/img/jhonatan.png",
-                    Rol = "Diseñadora Frontend"
+                    Rol = "Ing. Software"
                 },
                 new MiembroEquipo
                 {
@@ -53,7 +53,7 @@ namespace TallerIntegracionAPIs.Controllers
                     Email = "camily.solorzano@udla.edu.ec",
                     Intereses = "Frontend, UX/UI",
                     FotoUrl = "/img/camily.png",
-                    Rol = "Diseñadora Frontend"
+                    Rol = "Ing. Software"
                 }
             };
 
