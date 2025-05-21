@@ -26,7 +26,7 @@ namespace TallerIntegracionAPIs.Controllers
         {
             var historial = await _context.Respuestas
                 .OrderByDescending(r => r.Fecha)
-                .Take(15)
+                .Take(100)
                 .ToListAsync();
 
             var miembros = new List<MiembroEquipo>
